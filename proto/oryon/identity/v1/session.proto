@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package oryon.identity.v1;
+
+import "buf/validate/validate.proto";
+import "oryon/identity/v1/model.proto";
+
+// ========
+// services
+// ========
+
+service SessionService {
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc LogoutAll(LogoutAllRequest) returns (LogoutAllResponse);
+
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc GetCurrentSession(GetCurrentSessionRequest) returns (GetCurrentSessionResponse);
+}
+
+// ==============
+// rpc messages
+// ==============
+
+message LogoutRequest {
+  string refresh_token = 1 [(buf.validate.field).required = true];
+}
+
+message LogoutResponse {}
+
+message LogoutAllRequest {}
+
+message LogoutAllResponse {}
+
+message ListSessionsRequest {
+  int32 page_size = 1 [
+    (buf.validate.field).int32.gte = 0,
+    (buf.validate.field).int32.lte = 100
+  ];
+  string page_token = 2;
+  // By default only active (non-revoked, non-expired) sessions are returned.
+  bool include_revoked = 3;
+  bool include_expired = 4;
+}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+  string next_page_token = 2;
+  int32 total_size = 3;
+}
+
+message RevokeSessionRequest {
+  string session_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message RevokeSessionResponse {}
+
+message GetCurrentSessionRequest {}
+
+message GetCurrentSessionResponse {
+  Session session = 1;
+}

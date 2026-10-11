@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package oryon.identity.v1;
+
+import "google/protobuf/timestamp.proto";
+import "oryon/identity/v1/enum.proto";
+
+message Token {
+  string access_token = 1;
+  string refresh_token = 2;
+  string token_type = 3;
+  int64 expires_in = 4;
+}
+
+message AuthFlow {
+  string id = 1;
+  AuthFlowType flow_type = 2;
+  AuthFlowState flow_state = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message VerificationChallenge {
+  string id = 1;
+  string identifier = 2;
+  VerificationPurpose purpose = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message Session {
+  string id = 1;
+  string user_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  optional google.protobuf.Timestamp last_seen_at = 5;
+  optional google.protobuf.Timestamp revoked_at = 6;
+  optional string ip_address = 7;
+  optional string user_agent = 8;
+  optional google.protobuf.Timestamp mfa_verified_at = 9;
+  bool is_current = 10;
+}
+
+message User {
+  string id = 1;
+  UserStatus status = 2;
+  string name = 3;
+  optional string username = 4;
+  optional string avatar_url = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message UserEmail {
+  string id = 1;
+  string user_id = 2;
+  string email = 3;
+  bool is_primary = 4;
+}
+
+message UserPhone {
+  string id = 1;
+  string user_id = 2;
+  string phone = 3;
+}
