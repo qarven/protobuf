@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package oryon.identity.v1;
+
+import "buf/validate/validate.proto";
+import "oryon/identity/v1/enum.proto";
+import "oryon/identity/v1/model.proto";
+
+// ========
+// services
+// ========
+
+service AuthenticationService {
+  rpc Registration(RegistrationRequest) returns (RegistrationResponse);
+  rpc CompleteRegistration(CompleteRegistrationRequest) returns (CompleteRegistrationResponse);
+  rpc ResendRegistrationCode(ResendRegistrationCodeRequest) returns (ResendRegistrationCodeResponse);
+
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc CompleteLoginMfa(CompleteLoginMfaRequest) returns (CompleteLoginMfaResponse);
+
+  rpc BeginWebAuthnLogin(BeginWebAuthnLoginRequest) returns (BeginWebAuthnLoginResponse);
+  rpc CompleteWebAuthnLogin(CompleteWebAuthnLoginRequest) returns (CompleteWebAuthnLoginResponse);
+
+  rpc InitiatePasswordReset(InitiatePasswordResetRequest) returns (InitiatePasswordResetResponse);
+  rpc CompletePasswordReset(CompletePasswordResetRequest) returns (CompletePasswordResetResponse);
+}
+
+// ==============
+// rpc messages
+// ==============
+
+message RegistrationRequest {
+  option (buf.validate.message).cel = {
+    id: "registration.identifier_one_of"
+    message: "one of email or phone is required"
+    expression: "has(this.email) || has(this.phone)"
+  };
+
+  optional string email = 1 [(buf.validate.field).string.email = true];
+  optional string phone = 2 [(buf.validate.field).string.pattern = "^\\+[1-9]\\d{1,14}$"];
+  string password = 3 [
+    (buf.validate.field).string.min_len = 8,
+    (buf.validate.field).string.max_len = 128
+  ];
+  string name = 4 [(buf.validate.field).string.min_len = 3];
+}
+
+message RegistrationResponse {
+  AuthFlow flow = 1;
+}
+
+message CompleteRegistrationRequest {
+  option (buf.validate.message).cel = {
+    id: "complete_registration.code_one_of"
+    message: "one of email_code or phone_code is required"
+    expression: "has(this.email_code) || has(this.phone_code)"
+  };
+
+  string flow_id = 1 [(buf.validate.field).string.uuid = true];
+  optional string email_code = 2 [
+    (buf.validate.field).string.min_len = 6,
+    (buf.validate.field).string.max_len = 8
+  ];
+  optional string phone_code = 3 [
+    (buf.validate.field).string.min_len = 6,
+    (buf.validate.field).string.max_len = 8
+  ];
+}
+
+message CompleteRegistrationResponse {
+  User user = 1;
+}
+
+message ResendRegistrationCodeRequest {
+  string flow_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message ResendRegistrationCodeResponse {
+  AuthFlow flow = 1;
+}
+
+message LoginRequest {
+  // Email, phone (+E.164), or username identifier.
+  string identifier = 1 [(buf.validate.field).string.min_len = 3];
+  string password = 2 [(buf.validate.field).string.min_len = 3];
+}
+
+message LoginToken {
+  Token token = 1;
+  User user = 2;
+}
+
+message LoginMfa {
+  AuthFlow flow = 1;
+  repeated MfaFactorType available_mfa_methods = 2;
+}
+
+message LoginResponse {
+  oneof result {
+    LoginToken login_token = 1;
+    LoginMfa login_mfa = 2;
+  }
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1 [(buf.validate.field).required = true];
+}
+
+message RefreshTokenResponse {
+  Token token = 1;
+}
+
+message CompleteLoginMfaRequest {
+  string flow_id = 1 [(buf.validate.field).string.uuid = true];
+  string code = 2 [(buf.validate.field).required = true];
+  MfaFactorType factor_type = 3 [(buf.validate.field).required = true];
+}
+
+message CompleteLoginMfaResponse {
+  Token token = 1;
+  User user = 2;
+}
+
+message BeginWebAuthnLoginRequest {
+  string flow_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message BeginWebAuthnLoginResponse {
+  AuthFlow flow = 1;
+  // JSON-serialized PublicKeyCredentialRequestOptionsJSON (W3C L3).
+  // Opaque to proto, verified by server on Complete.
+  string request_options_json = 2 [
+    (buf.validate.field).string.min_len = 2,
+    (buf.validate.field).string.max_len = 32768
+  ];
+}
+
+message CompleteWebAuthnLoginRequest {
+  string flow_id = 1 [(buf.validate.field).string.uuid = true];
+  // JSON-serialized PublicKeyCredentialJSON from navigator.credentials.get().
+  string assertion_response_json = 2 [
+    (buf.validate.field).string.min_len = 2,
+    (buf.validate.field).string.max_len = 32768
+  ];
+}
+
+message CompleteWebAuthnLoginResponse {
+  Token token = 1;
+  User user = 2;
+}
+
+message InitiatePasswordResetRequest {
+  string identifier = 1 [(buf.validate.field).string.min_len = 3];
+}
+
+message InitiatePasswordResetResponse {}
+
+message CompletePasswordResetRequest {
+  string code = 1 [(buf.validate.field).required = true];
+  string new_password = 2 [
+    (buf.validate.field).string.min_len = 8,
+    (buf.validate.field).string.max_len = 128
+  ];
+}
+
+message CompletePasswordResetResponse {
+  User user = 1;
+}

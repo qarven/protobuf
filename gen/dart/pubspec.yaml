@@ -1,0 +1,10 @@
+name: sdk_protobuf_gen_dart
+version: 0.1.2
+description: Generated protobuf types for the Oryon API surface
+homepage: https://gitlab.com/projectaltair/oid/hris/sdk/protobuf
+environment:
+  sdk: ">=3.12.2 <4.0.0"
+  flutter: ">=3.47.6 <4.0.0"
+dependencies:
+  connectrpc: ^2.0.0
+  protobuf: ^6.1.0

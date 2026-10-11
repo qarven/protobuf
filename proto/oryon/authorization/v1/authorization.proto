@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package oryon.authorization.v1;
+
+// ========
+// services
+// ========
+
+service AuthorizationService {
+  rpc Permissions(PermissionsRequest) returns (PermissionsResponse) {}
+}
+
+// =====
+// enums
+// =====
+
+// ======
+// models
+// ======
+
+message Permission {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message PermissionsRequest {}
+
+message PermissionsResponse {
+  repeated Permission permissions = 1;
+}
