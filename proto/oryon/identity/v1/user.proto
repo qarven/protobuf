@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package oryon.identity.v1;
+
+import "buf/validate/validate.proto";
+import "oryon/identity/v1/model.proto";
+
+// ========
+// services
+// ========
+
+service UserService {
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse);
+  rpc UpdateCurrentUser(UpdateCurrentUserRequest) returns (UpdateCurrentUserResponse);
+
+  rpc AddEmail(AddEmailRequest) returns (AddEmailResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc ListEmails(ListEmailsRequest) returns (ListEmailsResponse);
+  rpc RemoveEmail(RemoveEmailRequest) returns (RemoveEmailResponse);
+  rpc SetPrimaryEmail(SetPrimaryEmailRequest) returns (SetPrimaryEmailResponse);
+  rpc ResendEmailVerification(ResendEmailVerificationRequest) returns (ResendEmailVerificationResponse);
+
+  rpc AddPhone(AddPhoneRequest) returns (AddPhoneResponse);
+  rpc VerifyPhone(VerifyPhoneRequest) returns (VerifyPhoneResponse);
+  rpc ListPhones(ListPhonesRequest) returns (ListPhonesResponse);
+  rpc RemovePhone(RemovePhoneRequest) returns (RemovePhoneResponse);
+  rpc ResendPhoneVerification(ResendPhoneVerificationRequest) returns (ResendPhoneVerificationResponse);
+}
+
+// ==============
+// rpc messages
+// ==============
+
+message GetCurrentUserRequest {}
+
+message GetCurrentUserResponse {
+  User user = 1;
+}
+
+message UpdateCurrentUserRequest {
+  optional string name = 1 [(buf.validate.field).string.min_len = 3];
+  optional string username = 2 [(buf.validate.field).string.min_len = 3];
+  optional string avatar_url = 3 [(buf.validate.field).string.uri = true];
+}
+
+message UpdateCurrentUserResponse {
+  User user = 1;
+}
+
+message AddEmailRequest {
+  string email = 1 [(buf.validate.field).string.email = true];
+}
+
+message AddEmailResponse {
+  VerificationChallenge verification_challenge = 1;
+}
+
+message VerifyEmailRequest {
+  string verification_id = 1 [(buf.validate.field).string.uuid = true];
+  string code = 2 [
+    (buf.validate.field).string.min_len = 6,
+    (buf.validate.field).string.max_len = 8
+  ];
+}
+
+message VerifyEmailResponse {
+  UserEmail email = 1;
+}
+
+message ListEmailsRequest {}
+
+message ListEmailsResponse {
+  repeated UserEmail emails = 1;
+}
+
+message RemoveEmailRequest {
+  string email_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message RemoveEmailResponse {}
+
+message SetPrimaryEmailRequest {
+  string email_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message SetPrimaryEmailResponse {
+  UserEmail email = 1;
+}
+
+message ResendEmailVerificationRequest {
+  string verification_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message ResendEmailVerificationResponse {
+  VerificationChallenge verification_challenge = 1;
+}
+
+message AddPhoneRequest {
+  string phone = 1 [(buf.validate.field).string.pattern = "^\\+[1-9]\\d{1,14}$"];
+}
+
+message AddPhoneResponse {
+  VerificationChallenge verification_challenge = 1;
+}
+
+message VerifyPhoneRequest {
+  string verification_id = 1 [(buf.validate.field).string.uuid = true];
+  string code = 2 [
+    (buf.validate.field).string.min_len = 6,
+    (buf.validate.field).string.max_len = 8
+  ];
+}
+
+message VerifyPhoneResponse {
+  UserPhone phone = 1;
+}
+
+message ListPhonesRequest {}
+
+message ListPhonesResponse {
+  repeated UserPhone phones = 1;
+}
+
+message RemovePhoneRequest {
+  string phone_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message RemovePhoneResponse {}
+
+message ResendPhoneVerificationRequest {
+  string verification_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message ResendPhoneVerificationResponse {
+  VerificationChallenge verification_challenge = 1;
+}
